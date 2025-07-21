@@ -6,6 +6,8 @@
 #define SCREEN_WIDTH	50
 #define	SCREEN_HEIGHT	26
 
+#define LARGE_STRING_ERR	1
+
 char screen_buff[SCREEN_WIDTH][SCREEN_HEIGHT];
 
 static void SetWindowsTitle(char *title)
@@ -30,19 +32,23 @@ static COORD SetNewBuffer(void)
 	return screen.dwSize;
 }
 
-static int SetInitialScreen(void)
+static COORD SetInitialScreen(void)
 {
-	COORD dimensions = SetNewBuffer();
-	int pad = (dimensions.X / 2) - (SCREEN_WIDTH / 2);
-	
+	COORD padding = SetNewBuffer();
+	padding.X = (padding.X / 2) - (SCREEN_WIDTH / 2);
+	padding.Y = (padding.Y / 2) - (SCREEN_HEIGHT / 2);
+
 	// hide cursor
 	printf("\x1b[?25l");
 
 	// entering into drawing mode
 	printf("\x1b(0");
+	
+	//move cursor
+	printf("\x1b[%dC", padding.X - 1);
+	printf("\x1b[%dB", padding.Y - 1);
 
 	// prints upper part of box
-	printf("\x1b[%dC", pad - 1);
 	printf("\x6c");
 	for (int i = 0; i < SCREEN_WIDTH; i++)
 	{
@@ -54,7 +60,7 @@ static int SetInitialScreen(void)
 	//prints middle part of box
 	for(int j = 0; j < SCREEN_HEIGHT; j++)
 	{
-		printf("\x1b[%dC", pad - 1);
+		printf("\x1b[%dC", padding.X - 1);
 		printf("\x78");
 		for (int i = 0; i < SCREEN_WIDTH; i++)
 		{
@@ -65,7 +71,7 @@ static int SetInitialScreen(void)
 	}
 
 	//prints the lower part of the box
-	printf("\x1b[%dC", pad - 1);
+	printf("\x1b[%dC", padding.X - 1);
 	printf("\x6d");
 	for (int i = 0; i < SCREEN_WIDTH; i++)
 	{
@@ -76,13 +82,46 @@ static int SetInitialScreen(void)
 	// return to ascii mode
 	printf("\x1b(B");
 
-	return pad;
+	return padding;
+}
+
+// makes the screen buffer empty
+void SetEmptyBuffer(void)
+{
+	for (int i = 0; i < SCREEN_HEIGHT; i++)
+	{
+		for (int j = 0; i < SCREEN_WIDTH; j++)
+		{
+			screen_buff[j][i] = ' ';
+		}
+	}
+}
+
+int CountStringLen(char* string)
+{
+	int i = 0;
+	for (; i < SCREEN_WIDTH | string[i] != '\0'; i++)
+		;
+	return i;
+}
+
+void WriteOnBuffer(char string[SCREEN_WIDTH], COORD position)
+{
+	int string_len = CountStringLen(string);
+	// validating the size of string
+	if (string_len > (SCREEN_WIDTH - position.X - 1) | position.Y > (SCREEN_WIDTH - 1))
+	{
+		fprintf(stderr, "WriteOnBuffer: The string is too large.");
+		exit(LARGE_STRING_ERR);
+	}
 }
 
 int main(void)
 {
 	SetWindowsTitle("Tetris!");
-	SetInitialScreen();
+	COORD padding = SetInitialScreen();
+	SetEmptyBuffer();
+
 	char c = getch();
 
 	// restores the main buffer
