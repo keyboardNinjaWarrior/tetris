@@ -11,31 +11,36 @@
 char screen_buff[SCREEN_HEIGHT][SCREEN_WIDTH];
 COORD screen_padding;
 
-static void SetWindowsTitle(char *title)
+static SetWindowsTitle(char *title)
 {
 	printf("\x1B]0;%s\x1B\x5c", title);
 }
-static COORD SetNewBuffer(void)
+
+static SetNewScreenBuffer(void)
+{
+	// new screen buffer
+	printf("\x1b[?1049h");
+	// moves the curser to (0,0)
+	printf("\x1b[0;0f");
+}
+
+COORD GetConsoleDimensions(void)
 {
 	CONSOLE_SCREEN_BUFFER_INFO screen;
 	HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	// new screen buffer
-	printf("\x1b[?1049h");
+	// gets console properties and stores them in screen
 	if (!GetConsoleScreenBufferInfo(console_handle, &screen))
 	{
 		fprintf(stderr, "\nSetNewBuffer: Unable to get information of buffer.\n" "Exited with GetLastError.\n");
 		exit(GetLastError());
 	}
-
-	// moves the curser to (0,0)
-	printf("\x1b[0;0f");
 	return screen.dwSize;
 }
 
-static void SetInitialScreen(void)
+static SetInitialScreen(void)
 {
-	screen_padding = SetNewBuffer();
+	screen_padding = GetConsoleDimensions();
 	screen_padding.X = (screen_padding.X / 2) - (SCREEN_WIDTH / 2);
 	screen_padding.Y = (screen_padding.Y / 2) - (SCREEN_HEIGHT / 2);
 
@@ -140,11 +145,12 @@ void FlushScreenBuffer(void)
 int main(void)
 {
 	// meta
+	SetNewScreenBuffer();
 	SetWindowsTitle("Tetris!");
 	SetInitialScreen();
-	SetEmptyBuffer();
 
 	// start menu
+	SetEmptyBuffer();
 	WriteOnBuffer(" _____    _        _     "	, 12, 11);
 	WriteOnBuffer("|_   _|__| |_ _ __(_)___ "	, 12, 12);
 	WriteOnBuffer("  | |/ _ \\ __| '__| / __|"	, 12, 13);
