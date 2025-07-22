@@ -189,6 +189,50 @@ static void SetGameScreen(void)
 	printf("\x1b[%d;%df", screen_padding.Y + GAME_ROWS - 7, screen_padding.X + GAME_COLUMNS + 5);
 	printf("\x76");
 
+	// the score heading
+	for (int i = 1; i <= 2; i++)
+	{
+		for (int j = GAME_COLUMNS + 6; j <= SCREEN_WIDTH; j++)
+		{
+			printf("\x1b[%d;%df", screen_padding.Y + i, screen_padding.X + j);
+			printf("\x61");
+		}
+	}
+
+	printf("\x1b(B");
+
+	printf("\x1b[%d;%df", screen_padding.Y + 3, screen_padding.X + GAME_COLUMNS + 6);
+	printf("Score:");
+
+	printf("\x1b(0");
+	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+	{
+		printf("\x1b[%d;%df", screen_padding.Y + 4, screen_padding.X + i);
+		printf("\x61");
+	}
+
+	for (int i = 6; i <= 7; i++)
+	{
+		for (int j = GAME_COLUMNS + 6; j <= SCREEN_WIDTH; j++)
+		{
+			printf("\x1b[%d;%df", screen_padding.Y + i, screen_padding.X + j);
+			printf("\x61");
+		}
+	}
+
+	// next category
+	printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + GAME_COLUMNS + 5);
+	printf("\x74");
+	for (int i = GAME_COLUMNS + 6; i < SCREEN_WIDTH + 1; i++)
+	{
+		printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + i);
+
+		printf("\x71");
+	}
+	printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + SCREEN_WIDTH + 1);
+	printf("\x75");
+
+
 	printf("\x1b(B");
 }
 
