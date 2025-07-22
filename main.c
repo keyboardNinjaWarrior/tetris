@@ -3,20 +3,23 @@
 #include <stdbool.h>
 #include <Windows.h>
 
-#define SCREEN_WIDTH	50
-#define	SCREEN_HEIGHT	28
+#define SCREEN_WIDTH	51
+#define	SCREEN_HEIGHT	22
+#define	GAME_COLUMNS	20
+#define GAME_ROWS		30
 
 #define LARGE_STRING_ERR	1
 
 char screen_buff[SCREEN_HEIGHT][SCREEN_WIDTH];
+char game_screen_buff[GAME_ROWS][GAME_COLUMNS];
 COORD screen_padding;
 
-static SetWindowsTitle(char *title)
+static void SetWindowsTitle(char *title)
 {
 	printf("\x1B]0;%s\x1B\x5c", title);
 }
 
-static SetNewScreenBuffer(void)
+static void SetNewScreenBuffer(void)
 {
 	// new screen buffer
 	printf("\x1b[?1049h");
@@ -24,7 +27,7 @@ static SetNewScreenBuffer(void)
 	printf("\x1b[0;0f");
 }
 
-COORD GetConsoleDimensions(void)
+static COORD GetConsoleDimensions(void)
 {
 	CONSOLE_SCREEN_BUFFER_INFO screen;
 	HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -38,7 +41,7 @@ COORD GetConsoleDimensions(void)
 	return screen.dwSize;
 }
 
-static SetInitialScreen(void)
+static void SetInitialScreen(void)
 {
 	screen_padding = GetConsoleDimensions();
 	screen_padding.X = (screen_padding.X / 2) - (SCREEN_WIDTH / 2);
@@ -90,7 +93,7 @@ static SetInitialScreen(void)
 }
 
 // makes the screen buffer empty
-void SetEmptyBuffer(void)
+static void SetEmptyBuffer(void)
 {
 	for (int i = 0; i < SCREEN_HEIGHT; i++)
 	{
@@ -101,7 +104,7 @@ void SetEmptyBuffer(void)
 	}
 }
 
-int CountStringLen(char* string)
+static int CountStringLen(char* string)
 {
 	int i = 0;
 	for (; i < SCREEN_WIDTH && string[i] != '\0'; i++)
@@ -109,7 +112,7 @@ int CountStringLen(char* string)
 	return i;
 }
 
-void WriteOnBuffer(char string[SCREEN_WIDTH], int x, int y)
+static void WriteOnScreenBuffer(char string[SCREEN_WIDTH], int x, int y)
 {
 	int string_len = CountStringLen(string);
 	// validating the size of string
@@ -126,7 +129,7 @@ void WriteOnBuffer(char string[SCREEN_WIDTH], int x, int y)
 
 }
 
-void FlushScreenBuffer(void)
+static void FlushScreenBuffer(void)
 {
 	// move cursor to initial position
 	printf("\x1b[%d;%df", screen_padding.Y + 1, screen_padding.X + 1);
@@ -142,6 +145,50 @@ void FlushScreenBuffer(void)
 	}
 }
 
+static void SetGameScreen(void)
+{
+	for (int i = 0; i < SCREEN_HEIGHT - 1; i++)
+	{
+		WriteOnScreenBuffer("<", 0, i);
+		WriteOnScreenBuffer("!", 1, i);
+	}
+
+	for (int i = 0; i < SCREEN_HEIGHT - 1; i++)
+	{
+		WriteOnScreenBuffer("!", GAME_COLUMNS + 2, i);
+		WriteOnScreenBuffer(">", GAME_COLUMNS + 3, i);
+	}
+
+	for (int i = 2; (i - 2) < GAME_COLUMNS; i++)
+	{
+		WriteOnScreenBuffer("=", i, SCREEN_HEIGHT - 2);
+	}
+
+	for (int i = 2; (i - 2) < GAME_COLUMNS; i = i + 2)
+	{
+		WriteOnScreenBuffer("\\", i, SCREEN_HEIGHT - 1);
+	}
+
+	for (int i = 3; (i - 3) < GAME_COLUMNS; i = i + 2)
+	{
+		WriteOnScreenBuffer("/", i, SCREEN_HEIGHT - 1);
+	}
+
+	FlushScreenBuffer();
+}
+
+static void Game(void)
+{
+	SetEmptyBuffer();
+	SetGameScreen();
+
+}
+
+static void GetAnyInput(void)
+{
+	char c = _getch();
+}
+
 int main(void)
 {
 	// meta
@@ -151,15 +198,18 @@ int main(void)
 
 	// start menu
 	SetEmptyBuffer();
-	WriteOnBuffer(" _____    _        _     "	, 12, 11);
-	WriteOnBuffer("|_   _|__| |_ _ __(_)___ "	, 12, 12);
-	WriteOnBuffer("  | |/ _ \\ __| '__| / __|"	, 12, 13);
-	WriteOnBuffer("  | |  __/ |_| |  | \\__ \\"	, 12, 14);
-	WriteOnBuffer("  |_|\\___|\\__|_|  |_|___/"	, 12, 15);
-
-	WriteOnBuffer("Press any key to continue", 12, SCREEN_HEIGHT - 1);
+	WriteOnScreenBuffer(" _____    _        _     ", 13, 4);
+	WriteOnScreenBuffer("|_   _|__| |_ _ __(_)___ ", 13, 5);
+	WriteOnScreenBuffer("  | |/ _ \\ __| '__| / __|", 13, 6);
+	WriteOnScreenBuffer("  | |  __/ |_| |  | \\__ \\", 13, 7);
+	WriteOnScreenBuffer("  |_|\\___|\\__|_|  |_|___/", 13, 8);
+	
+	WriteOnScreenBuffer("Press any key to play", 15, SCREEN_HEIGHT - 1);
 	FlushScreenBuffer();
-	char c = getch();
+	GetAnyInput();
+
+	Game();
+	GetAnyInput();
 
 	// restores the main buffer
 	printf("\x1b[?1049l");
