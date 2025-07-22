@@ -126,7 +126,6 @@ static void WriteOnScreenBuffer(char string[SCREEN_WIDTH], int x, int y)
 	{
 		screen_buff[y][i] = string[i - x];
 	}
-
 }
 
 static void FlushScreenBuffer(void)
@@ -147,6 +146,7 @@ static void FlushScreenBuffer(void)
 
 static void SetGameScreen(void)
 {
+	// the borders of the game
 	for (int i = 0; i < SCREEN_HEIGHT - 1; i++)
 	{
 		WriteOnScreenBuffer("<", 0, i);
@@ -175,13 +175,27 @@ static void SetGameScreen(void)
 	}
 
 	FlushScreenBuffer();
+
+	// the dividing line
+	printf("\x1b(0");
+	
+	printf("\x1b[%d;%df", screen_padding.Y, screen_padding.X + GAME_COLUMNS + 5);
+	printf("\x77");
+	for (int i = 1; i <= GAME_ROWS - 8; i++)
+	{
+		printf("\x1b[%d;%df", screen_padding.Y + i, screen_padding.X + GAME_COLUMNS + 5);
+		printf("\x78");
+	}
+	printf("\x1b[%d;%df", screen_padding.Y + GAME_ROWS - 7, screen_padding.X + GAME_COLUMNS + 5);
+	printf("\x76");
+
+	printf("\x1b(B");
 }
 
 static void Game(void)
 {
 	SetEmptyBuffer();
 	SetGameScreen();
-
 }
 
 static void GetAnyInput(void)
@@ -207,7 +221,8 @@ int main(void)
 	WriteOnScreenBuffer("Press any key to play", 15, SCREEN_HEIGHT - 1);
 	FlushScreenBuffer();
 	GetAnyInput();
-
+	
+	// the main game
 	Game();
 	GetAnyInput();
 
