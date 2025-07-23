@@ -5,13 +5,17 @@
 
 #define SCREEN_WIDTH	51
 #define	SCREEN_HEIGHT	22
-#define	GAME_COLUMNS	20
-#define GAME_ROWS		30
+#define	GAME_WIDTH		20
+#define GAME_HEIGHT		30
+#define TET_HEIGHT		2
+#define TET_WIDTH		8
 
 #define LARGE_STRING_ERR	1
 
 char screen_buff[SCREEN_HEIGHT][SCREEN_WIDTH];
-char game_screen_buff[GAME_ROWS][GAME_COLUMNS];
+char game_screen_buff[GAME_HEIGHT][GAME_WIDTH];
+char tetromino[TET_HEIGHT][TET_WIDTH];
+char next_tetromino[TET_HEIGHT][TET_WIDTH];
 COORD screen_padding;
 
 static void SetWindowsTitle(char *title)
@@ -104,7 +108,7 @@ static void SetEmptyBuffer(void)
 	}
 }
 
-static int CountStringLen(char* string)
+static int CountStringLen(char * string)
 {
 	int i = 0;
 	for (; i < SCREEN_WIDTH && string[i] != '\0'; i++)
@@ -155,21 +159,21 @@ static void SetGameScreen(void)
 
 	for (int i = 0; i < SCREEN_HEIGHT - 1; i++)
 	{
-		WriteOnScreenBuffer("!", GAME_COLUMNS + 2, i);
-		WriteOnScreenBuffer(">", GAME_COLUMNS + 3, i);
+		WriteOnScreenBuffer("!", GAME_WIDTH + 2, i);
+		WriteOnScreenBuffer(">", GAME_WIDTH + 3, i);
 	}
 
-	for (int i = 2; (i - 2) < GAME_COLUMNS; i++)
+	for (int i = 2; (i - 2) < GAME_WIDTH; i++)
 	{
 		WriteOnScreenBuffer("=", i, SCREEN_HEIGHT - 2);
 	}
 
-	for (int i = 2; (i - 2) < GAME_COLUMNS; i = i + 2)
+	for (int i = 2; (i - 2) < GAME_WIDTH; i = i + 2)
 	{
 		WriteOnScreenBuffer("\\", i, SCREEN_HEIGHT - 1);
 	}
 
-	for (int i = 3; (i - 3) < GAME_COLUMNS; i = i + 2)
+	for (int i = 3; (i - 3) < GAME_WIDTH; i = i + 2)
 	{
 		WriteOnScreenBuffer("/", i, SCREEN_HEIGHT - 1);
 	}
@@ -179,20 +183,20 @@ static void SetGameScreen(void)
 	// the dividing line
 	printf("\x1b(0");
 	
-	printf("\x1b[%d;%df", screen_padding.Y, screen_padding.X + GAME_COLUMNS + 5);
+	printf("\x1b[%d;%df", screen_padding.Y, screen_padding.X + GAME_WIDTH + 5);
 	printf("\x77");
-	for (int i = 1; i <= GAME_ROWS - 8; i++)
+	for (int i = 1; i <= GAME_HEIGHT - 8; i++)
 	{
-		printf("\x1b[%d;%df", screen_padding.Y + i, screen_padding.X + GAME_COLUMNS + 5);
+		printf("\x1b[%d;%df", screen_padding.Y + i, screen_padding.X + GAME_WIDTH + 5);
 		printf("\x78");
 	}
-	printf("\x1b[%d;%df", screen_padding.Y + GAME_ROWS - 7, screen_padding.X + GAME_COLUMNS + 5);
+	printf("\x1b[%d;%df", screen_padding.Y + GAME_HEIGHT - 7, screen_padding.X + GAME_WIDTH + 5);
 	printf("\x76");
 
 	// the score heading
 	for (int i = 1; i <= 2; i++)
 	{
-		for (int j = GAME_COLUMNS + 6; j <= SCREEN_WIDTH; j++)
+		for (int j = GAME_WIDTH + 6; j <= SCREEN_WIDTH; j++)
 		{
 			printf("\x1b[%d;%df", screen_padding.Y + i, screen_padding.X + j);
 			printf("\x61");
@@ -200,12 +204,11 @@ static void SetGameScreen(void)
 	}
 
 	printf("\x1b(B");
-
-	printf("\x1b[%d;%df", screen_padding.Y + 3, screen_padding.X + GAME_COLUMNS + 6);
+	printf("\x1b[%d;%df", screen_padding.Y + 3, screen_padding.X + GAME_WIDTH + 6);
 	printf("Score:");
-
 	printf("\x1b(0");
-	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+
+	for (int i = GAME_WIDTH + 6; i <= SCREEN_WIDTH; i++)
 	{
 		printf("\x1b[%d;%df", screen_padding.Y + 4, screen_padding.X + i);
 		printf("\x61");
@@ -213,7 +216,7 @@ static void SetGameScreen(void)
 
 	for (int i = 6; i <= 7; i++)
 	{
-		for (int j = GAME_COLUMNS + 6; j <= SCREEN_WIDTH; j++)
+		for (int j = GAME_WIDTH + 6; j <= SCREEN_WIDTH; j++)
 		{
 			printf("\x1b[%d;%df", screen_padding.Y + i, screen_padding.X + j);
 			printf("\x61");
@@ -221,9 +224,9 @@ static void SetGameScreen(void)
 	}
 
 	// next block division
-	printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + GAME_COLUMNS + 5);
+	printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + GAME_WIDTH + 5);
 	printf("\x74");
-	for (int i = GAME_COLUMNS + 6; i < SCREEN_WIDTH + 1; i++)
+	for (int i = GAME_WIDTH + 6; i < SCREEN_WIDTH + 1; i++)
 	{
 		printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + i);
 		printf("\x71");
@@ -231,31 +234,133 @@ static void SetGameScreen(void)
 	printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + SCREEN_WIDTH + 1);
 	printf("\x75");
 
-	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+	for (int i = GAME_WIDTH + 6; i <= SCREEN_WIDTH; i++)
 	{
 		printf("\x1b[%d;%df", screen_padding.Y + 9, screen_padding.X + i);
 		printf("\x61");
 	}
 
 
-	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+	for (int i = GAME_WIDTH + 6; i <= SCREEN_WIDTH; i++)
 	{
 		printf("\x1b[%d;%df", screen_padding.Y + 9, screen_padding.X + i);
 		printf("\x61");
 	}
 	
-	printf("\x1b[%d;%df", screen_padding.Y + 10, screen_padding.X + GAME_COLUMNS + 6);
+	printf("\x1b[%d;%df", screen_padding.Y + 10, screen_padding.X + GAME_WIDTH + 6);
 	printf("\x1b(B");
 	printf("Next Block:");
 	printf("\x1b(0");
 
-	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+	for (int i = GAME_WIDTH + 6; i <= SCREEN_WIDTH; i++)
 	{
 		printf("\x1b[%d;%df", screen_padding.Y + 11, screen_padding.X + i);
 		printf("\x61");
 	}
 
 	printf("\x1b(B");
+}
+
+static void tetromino_i(char *p_tetromino)
+{
+	for (int i = 0; i < 8; i = i + 2)
+	{
+		*(p_tetromino + (1 * 8) + i) = '[';
+	}
+	for (int i = 1; i < 8; i = i + 2)
+	{
+		*(p_tetromino + (1 * 8) + i) = ']';
+	}
+}
+
+static void tetromino_t(char *p_tetromino)
+{
+	*(p_tetromino + (1 * 8) + 0) = '[';
+	*(p_tetromino + (1 * 8) + 1) = ']';
+
+	*(p_tetromino + (1 * 8) + 2) = '[';
+	*(p_tetromino + (1 * 8) + 3) = ']';
+
+	*(p_tetromino + (1 * 8) + 4) = '[';
+	*(p_tetromino + (1 * 8) + 5) = ']';
+
+	*(p_tetromino + (0 * 8) + 2) = '[';
+	*(p_tetromino + (0 * 8) + 3) = ']';
+}
+
+static void tetromino_l(char *p_tetromino)
+{
+	*(p_tetromino + (1 * 8) + 0) = '[';
+	*(p_tetromino + (1 * 8) + 1) = ']';
+
+	*(p_tetromino + (1 * 8) + 2) = '[';
+	*(p_tetromino + (1 * 8) + 3) = ']';
+
+	*(p_tetromino + (1 * 8) + 4) = '[';
+	*(p_tetromino + (1 * 8) + 5) = ']';
+
+	*(p_tetromino + (0 * 8) + 4) = '[';
+	*(p_tetromino + (0 * 8) + 5) = ']';
+}
+
+static void tetromino_j(char *p_tetromino)
+{
+	*(p_tetromino + (1 * 8) + 0) = '[';
+	*(p_tetromino + (1 * 8) + 1) = ']';
+
+	*(p_tetromino + (1 * 8) + 2) = '[';
+	*(p_tetromino + (1 * 8) + 3) = ']';
+
+	*(p_tetromino + (1 * 8) + 4) = '[';
+	*(p_tetromino + (1 * 8) + 5) = ']';
+
+	*(p_tetromino + (0 * 8) + 0) = '[';
+	*(p_tetromino + (0 * 8) + 1) = ']';
+}
+
+static void tetromino_z(char *p_tetromino)
+{
+	*(p_tetromino + (0 * 8) + 0) = '[';
+	*(p_tetromino + (0 * 8) + 1) = ']';
+
+	*(p_tetromino + (0 * 8) + 2) = '[';
+	*(p_tetromino + (0 * 8) + 3) = ']';
+
+	*(p_tetromino + (1 * 8) + 2) = '[';
+	*(p_tetromino + (1 * 8) + 3) = ']';
+
+	*(p_tetromino + (1 * 8) + 4) = '[';
+	*(p_tetromino + (1 * 8) + 5) = ']';
+}
+
+static void tetromino_s(char *p_tetromino)
+{
+	*(p_tetromino + (1 * 8) + 0) = '[';
+	*(p_tetromino + (1 * 8) + 1) = ']';
+
+	*(p_tetromino + (1 * 8) + 2) = '[';
+	*(p_tetromino + (1 * 8) + 3) = ']';
+
+	*(p_tetromino + (0 * 8) + 2) = '[';
+	*(p_tetromino + (0 * 8) + 3) = ']';
+
+	*(p_tetromino + (0 * 8) + 4) = '[';
+	*(p_tetromino + (0 * 8) + 5) = ']';
+}
+
+static void tetromino_o(char *p_tetromino)
+{
+	*(p_tetromino + (0 * 8) + 0) = '[';
+	*(p_tetromino + (0 * 8) + 1) = ']';
+
+	*(p_tetromino + (0 * 8) + 2) = '[';
+	*(p_tetromino + (0 * 8) + 3) = ']';
+
+	*(p_tetromino + (1 * 8) + 0) = '[';
+	*(p_tetromino + (1 * 8) + 1) = ']';
+
+	*(p_tetromino + (1 * 8) + 2) = '[';
+	*(p_tetromino + (1 * 8) + 3) = ']';
 }
 
 static void Game(void)
@@ -278,11 +383,11 @@ int main(void)
 
 	// start menu
 	SetEmptyBuffer();
-	WriteOnScreenBuffer(" _____    _        _     ", 13, 4);
-	WriteOnScreenBuffer("|_   _|__| |_ _ __(_)___ ", 13, 5);
-	WriteOnScreenBuffer("  | |/ _ \\ __| '__| / __|", 13, 6);
-	WriteOnScreenBuffer("  | |  __/ |_| |  | \\__ \\", 13, 7);
-	WriteOnScreenBuffer("  |_|\\___|\\__|_|  |_|___/", 13, 8);
+	WriteOnScreenBuffer(" _____    _        _     "		, 13, 4);
+	WriteOnScreenBuffer("|_   _|__| |_ _ __(_)___ "		, 13, 5);
+	WriteOnScreenBuffer("  | |/ _ \\ __| '__| / __|"	, 13, 6);
+	WriteOnScreenBuffer("  | |  __/ |_| |  | \\__ \\"	, 13, 7);
+	WriteOnScreenBuffer("  |_|\\___|\\__|_|  |_|___/"	, 13, 8);
 	
 	WriteOnScreenBuffer("Press any key to play", 15, SCREEN_HEIGHT - 1);
 	FlushScreenBuffer();
