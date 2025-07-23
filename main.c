@@ -220,18 +220,40 @@ static void SetGameScreen(void)
 		}
 	}
 
-	// next category
+	// next block division
 	printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + GAME_COLUMNS + 5);
 	printf("\x74");
 	for (int i = GAME_COLUMNS + 6; i < SCREEN_WIDTH + 1; i++)
 	{
 		printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + i);
-
 		printf("\x71");
 	}
 	printf("\x1b[%d;%df", screen_padding.Y + 8, screen_padding.X + SCREEN_WIDTH + 1);
 	printf("\x75");
 
+	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+	{
+		printf("\x1b[%d;%df", screen_padding.Y + 9, screen_padding.X + i);
+		printf("\x61");
+	}
+
+
+	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+	{
+		printf("\x1b[%d;%df", screen_padding.Y + 9, screen_padding.X + i);
+		printf("\x61");
+	}
+	
+	printf("\x1b[%d;%df", screen_padding.Y + 10, screen_padding.X + GAME_COLUMNS + 6);
+	printf("\x1b(B");
+	printf("Next Block:");
+	printf("\x1b(0");
+
+	for (int i = GAME_COLUMNS + 6; i <= SCREEN_WIDTH; i++)
+	{
+		printf("\x1b[%d;%df", screen_padding.Y + 11, screen_padding.X + i);
+		printf("\x61");
+	}
 
 	printf("\x1b(B");
 }
