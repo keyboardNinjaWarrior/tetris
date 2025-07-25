@@ -135,7 +135,7 @@ static void WriteOnScreenBuffer(char string[SCREEN_WIDTH], int x, int y)
 {
 	int string_len = CountStringLen(string);
 	// validating the size of string
-	if (string_len > (SCREEN_WIDTH - x) || y >= SCREEN_HEIGHT)
+	if ((string_len > (SCREEN_WIDTH - x) || y >= SCREEN_HEIGHT) && (x < 0 || y < 0))
 	{
 		fprintf(stderr, "\nWriteOnBuffer: The string doesn't fit or either is too large.\n");
 		exit(LARGE_STRING_ERR);
@@ -423,15 +423,7 @@ static void SetTetrominoNull(char* p_tetromino, struct _tetromino_properties *p_
 
 static unsigned short int RandomIndex(void)
 {
-	srand(time(NULL));
-	unsigned short int random_tetromino_index;
-
-	do
-	{
-		random_tetromino_index = rand() % 10;
-	} while (random_tetromino_index >= 6 && random_tetromino_index <= 0);
-
-	return random_tetromino_index;
+	return (unsigned short int) (rand() % 7);
 }
 
 static void PrintTetromino(void)
@@ -439,12 +431,10 @@ static void PrintTetromino(void)
 	for (int i = 0; i < tetromino_properties.dimensions.Y; i++)
 	{
 		printf("\x1b[%d;%df", screen_padding.Y + tetromino_properties.index.Y + i + 1, screen_padding.X + tetromino_properties.index.X + 3);
-		
 		for (int j = 0; j < tetromino_properties.dimensions.X * 2; j++)
 		{
 			printf("%c", tetromino[i][j]);
 		}
-
 	}
 }
 
@@ -477,6 +467,7 @@ int main(void)
 	SetNewScreenBuffer();
 	SetWindowsTitle("Tetris!");
 	SetInitialScreen();
+	srand(time(NULL));
 
 	// start menu
 	SetEmptyBuffer();
@@ -493,7 +484,7 @@ int main(void)
 	// the main game
 	Game();
 
-	// restores the main buffer
+	// restores to the main buffer
 	printf("\x1b[?1049l");
 	// show cursor
 	printf("\x1b[?25l");
