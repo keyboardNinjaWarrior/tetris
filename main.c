@@ -1,5 +1,7 @@
+#include <time.h>
 #include <stdio.h>
 #include <conio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <Windows.h>
 
@@ -17,6 +19,18 @@ char game_screen_buff[GAME_HEIGHT][GAME_WIDTH];
 char tetromino[TET_HEIGHT][TET_WIDTH];
 char next_tetromino[TET_HEIGHT][TET_WIDTH];
 COORD screen_padding;
+
+enum {I, J, L, O, S, T, Z, EMPTY};
+
+struct _tetromino_properties{
+	int tetromino_type;
+	COORD dimensions;
+} tetromino_properties, next_termino_property;
+
+static void GetAnyInput(void)
+{
+	char c = _getch();
+}
 
 static void SetWindowsTitle(char *title)
 {
@@ -261,19 +275,22 @@ static void SetGameScreen(void)
 	printf("\x1b(B");
 }
 
-static void tetromino_i(char *p_tetromino)
+static void SetTetrominoI(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
 {
 	for (int i = 0; i < 8; i = i + 2)
 	{
-		*(p_tetromino + (1 * 8) + i) = '[';
+		*(p_tetromino + (0 * 8) + i) = '[';
 	}
+
 	for (int i = 1; i < 8; i = i + 2)
 	{
-		*(p_tetromino + (1 * 8) + i) = ']';
+		*(p_tetromino + (0 * 8) + i) = ']';
 	}
+
+	p_tetromino_properties->tetromino_type = I;
 }
 
-static void tetromino_t(char *p_tetromino)
+static void SetTetrominoT(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
 {
 	*(p_tetromino + (1 * 8) + 0) = '[';
 	*(p_tetromino + (1 * 8) + 1) = ']';
@@ -286,9 +303,11 @@ static void tetromino_t(char *p_tetromino)
 
 	*(p_tetromino + (0 * 8) + 2) = '[';
 	*(p_tetromino + (0 * 8) + 3) = ']';
+
+	p_tetromino_properties->tetromino_type = T;
 }
 
-static void tetromino_l(char *p_tetromino)
+static void SetTetrominoL(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
 {
 	*(p_tetromino + (1 * 8) + 0) = '[';
 	*(p_tetromino + (1 * 8) + 1) = ']';
@@ -301,9 +320,11 @@ static void tetromino_l(char *p_tetromino)
 
 	*(p_tetromino + (0 * 8) + 4) = '[';
 	*(p_tetromino + (0 * 8) + 5) = ']';
+
+	p_tetromino_properties->tetromino_type = L;
 }
 
-static void tetromino_j(char *p_tetromino)
+static void SetTetrominoJ(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
 {
 	*(p_tetromino + (1 * 8) + 0) = '[';
 	*(p_tetromino + (1 * 8) + 1) = ']';
@@ -316,9 +337,11 @@ static void tetromino_j(char *p_tetromino)
 
 	*(p_tetromino + (0 * 8) + 0) = '[';
 	*(p_tetromino + (0 * 8) + 1) = ']';
+
+	p_tetromino_properties->tetromino_type = J;
 }
 
-static void tetromino_z(char *p_tetromino)
+static void SetTetrominoZ(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
 {
 	*(p_tetromino + (0 * 8) + 0) = '[';
 	*(p_tetromino + (0 * 8) + 1) = ']';
@@ -331,9 +354,11 @@ static void tetromino_z(char *p_tetromino)
 
 	*(p_tetromino + (1 * 8) + 4) = '[';
 	*(p_tetromino + (1 * 8) + 5) = ']';
+
+	p_tetromino_properties->tetromino_type = Z;
 }
 
-static void tetromino_s(char *p_tetromino)
+static void SetTetrominoS(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
 {
 	*(p_tetromino + (1 * 8) + 0) = '[';
 	*(p_tetromino + (1 * 8) + 1) = ']';
@@ -346,9 +371,11 @@ static void tetromino_s(char *p_tetromino)
 
 	*(p_tetromino + (0 * 8) + 4) = '[';
 	*(p_tetromino + (0 * 8) + 5) = ']';
+
+	p_tetromino_properties->tetromino_type = S;
 }
 
-static void tetromino_o(char *p_tetromino)
+static void SetTetrominoO(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
 {
 	*(p_tetromino + (0 * 8) + 0) = '[';
 	*(p_tetromino + (0 * 8) + 1) = ']';
@@ -361,17 +388,54 @@ static void tetromino_o(char *p_tetromino)
 
 	*(p_tetromino + (1 * 8) + 2) = '[';
 	*(p_tetromino + (1 * 8) + 3) = ']';
+
+	p_tetromino_properties->tetromino_type = O;
+}
+
+static void SetTetrominoNull(char* p_tetromino, struct _tetromino_properties *p_tetromino_properties)
+{
+	for (int i = 0; i < TET_HEIGHT; i++)
+	{
+		for (int j = 0; j < TET_WIDTH; j++)
+		{
+			*(p_tetromino + (j * TET_WIDTH) + i) = ' ';
+		}
+	}
+
+	p_tetromino_properties->tetromino_type = EMPTY;
+}
+
+static short int RandomIndex(void)
+{
+	srand(time(NULL));
+	short int random_tetromino_index;
+
+	do
+	{
+		random_tetromino_index = rand() % 10;
+	} while (random_tetromino_index > 7 && random_tetromino_index < 0);
+
+	return random_tetromino_index;
 }
 
 static void Game(void)
 {
 	SetEmptyBuffer();
 	SetGameScreen();
-}
 
-static void GetAnyInput(void)
-{
-	char c = _getch();
+	void (*SetTetromino[7])(char *, struct _tetromino_properties *) =	{
+																			&SetTetrominoI,	\
+																			&SetTetrominoJ,	\
+																			&SetTetrominoL,	\
+																			&SetTetrominoO,	\
+																			&SetTetrominoS,	\
+																			&SetTetrominoT,	\
+																			&SetTetrominoZ	\
+																		};
+
+	SetTetrominoNull(&tetromino[0][0], &tetromino_properties);
+
+	GetAnyInput();
 }
 
 int main(void)
@@ -395,7 +459,6 @@ int main(void)
 	
 	// the main game
 	Game();
-	GetAnyInput();
 
 	// restores the main buffer
 	printf("\x1b[?1049l");
