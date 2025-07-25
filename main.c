@@ -25,6 +25,7 @@ enum {I, J, L, O, S, T, Z, EMPTY};
 struct _tetromino_properties{
 	int tetromino_type;
 	COORD dimensions;
+	COORD index;
 } tetromino_properties, next_termino_property;
 
 static void GetAnyInput(void)
@@ -288,6 +289,9 @@ static void SetTetrominoI(char *p_tetromino, struct _tetromino_properties *p_tet
 	}
 
 	p_tetromino_properties->tetromino_type = I;
+	p_tetromino_properties->dimensions.X = 4;
+	p_tetromino_properties->dimensions.Y = 1;
+
 }
 
 static void SetTetrominoT(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
@@ -305,6 +309,8 @@ static void SetTetrominoT(char *p_tetromino, struct _tetromino_properties *p_tet
 	*(p_tetromino + (0 * 8) + 3) = ']';
 
 	p_tetromino_properties->tetromino_type = T;
+	p_tetromino_properties->dimensions.X = 3;
+	p_tetromino_properties->dimensions.Y = 2;
 }
 
 static void SetTetrominoL(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
@@ -322,6 +328,8 @@ static void SetTetrominoL(char *p_tetromino, struct _tetromino_properties *p_tet
 	*(p_tetromino + (0 * 8) + 5) = ']';
 
 	p_tetromino_properties->tetromino_type = L;
+	p_tetromino_properties->dimensions.X = 3;
+	p_tetromino_properties->dimensions.Y = 2;
 }
 
 static void SetTetrominoJ(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
@@ -339,6 +347,8 @@ static void SetTetrominoJ(char *p_tetromino, struct _tetromino_properties *p_tet
 	*(p_tetromino + (0 * 8) + 1) = ']';
 
 	p_tetromino_properties->tetromino_type = J;
+	p_tetromino_properties->dimensions.X = 3;
+	p_tetromino_properties->dimensions.Y = 2;
 }
 
 static void SetTetrominoZ(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
@@ -356,6 +366,8 @@ static void SetTetrominoZ(char *p_tetromino, struct _tetromino_properties *p_tet
 	*(p_tetromino + (1 * 8) + 5) = ']';
 
 	p_tetromino_properties->tetromino_type = Z;
+	p_tetromino_properties->dimensions.X = 3;
+	p_tetromino_properties->dimensions.Y = 2;
 }
 
 static void SetTetrominoS(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
@@ -373,6 +385,8 @@ static void SetTetrominoS(char *p_tetromino, struct _tetromino_properties *p_tet
 	*(p_tetromino + (0 * 8) + 5) = ']';
 
 	p_tetromino_properties->tetromino_type = S;
+	p_tetromino_properties->dimensions.X = 3;
+	p_tetromino_properties->dimensions.Y = 2;
 }
 
 static void SetTetrominoO(char *p_tetromino, struct _tetromino_properties *p_tetromino_properties)
@@ -390,6 +404,8 @@ static void SetTetrominoO(char *p_tetromino, struct _tetromino_properties *p_tet
 	*(p_tetromino + (1 * 8) + 3) = ']';
 
 	p_tetromino_properties->tetromino_type = O;
+	p_tetromino_properties->dimensions.X = 2;
+	p_tetromino_properties->dimensions.Y = 2;
 }
 
 static void SetTetrominoNull(char* p_tetromino, struct _tetromino_properties *p_tetromino_properties)
@@ -405,17 +421,31 @@ static void SetTetrominoNull(char* p_tetromino, struct _tetromino_properties *p_
 	p_tetromino_properties->tetromino_type = EMPTY;
 }
 
-static short int RandomIndex(void)
+static unsigned short int RandomIndex(void)
 {
-	srand(time(NULL));
-	short int random_tetromino_index;
+	srand(time(NULL);
+	unsigned short int random_tetromino_index;
 
 	do
 	{
 		random_tetromino_index = rand() % 10;
-	} while (random_tetromino_index > 7 && random_tetromino_index < 0);
+	} while (random_tetromino_index >= 6 && random_tetromino_index <= 0);
 
 	return random_tetromino_index;
+}
+
+static void PrintTetromino(void)
+{
+	for (int i = 0; i < tetromino_properties.dimensions.Y; i++)
+	{
+		printf("\x1b[%d;%df", screen_padding.Y + tetromino_properties.index.Y + i + 1, screen_padding.X + tetromino_properties.index.X + 3);
+		
+		for (int j = 0; j < tetromino_properties.dimensions.X * 2; j++)
+		{
+			printf("%c", tetromino[i][j]);
+		}
+
+	}
 }
 
 static void Game(void)
@@ -434,7 +464,10 @@ static void Game(void)
 																		};
 
 	SetTetrominoNull(&tetromino[0][0], &tetromino_properties);
-
+	SetTetromino[RandomIndex()](&tetromino[0][0], &tetromino_properties);
+	tetromino_properties.index.X = 6;
+	tetromino_properties.index.Y = 0;
+	PrintTetromino();
 	GetAnyInput();
 }
 
