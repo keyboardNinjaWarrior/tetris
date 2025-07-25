@@ -423,7 +423,7 @@ static void SetTetrominoNull(char* p_tetromino, struct _tetromino_properties *p_
 
 static unsigned short int RandomIndex(void)
 {
-	srand(time(NULL);
+	srand(time(NULL));
 	unsigned short int random_tetromino_index;
 
 	do
